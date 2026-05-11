@@ -1,8 +1,27 @@
+import Link from "next/link";
 import GoogleSignInButton from "./google-sign-in-button";
 
-export default function AuthCard() {
+interface AuthCardProps {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+
+  footerText: string;
+  footerLinkText: string;
+  footerLinkHref: string;
+}
+
+export default function AuthCard({
+  title,
+  subtitle,
+  buttonText,
+  footerText,
+  footerLinkText,
+  footerLinkHref,
+}: AuthCardProps) {
   return (
     <div className="w-full max-w-6xl grid lg:grid-cols-2 rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-950">
+      
       {/* LEFT SIDE */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-red-600 via-red-500 to-orange-500">
         <div>
@@ -49,14 +68,12 @@ export default function AuthCard() {
 
               <div>
                 <h2 className="text-2xl font-bold">YouTube Clone</h2>
-                <p className="text-zinc-400 text-sm">
-                  Welcome back to your platform
-                </p>
+                <p className="text-zinc-400 text-sm">{subtitle}</p>
               </div>
             </div>
 
             <h1 className="text-4xl font-black tracking-tight">
-              Sign in
+              {title}
             </h1>
 
             <p className="text-zinc-400 mt-2">
@@ -67,7 +84,20 @@ export default function AuthCard() {
           <div className="space-y-4">
             <GoogleSignInButton />
 
-           
+            <p className="text-center text-sm text-zinc-500">
+              {buttonText}
+            </p>
+          </div>
+
+          {/* FOOTER LINK */}
+          <div className="mt-6 text-center text-sm text-zinc-400">
+            {footerText}{" "}
+            <Link
+              href={footerLinkHref}
+              className="text-red-500 hover:text-red-400 font-semibold transition-colors"
+            >
+              {footerLinkText}
+            </Link>
           </div>
 
           <div className="mt-8 text-center text-sm text-zinc-500 leading-relaxed">
