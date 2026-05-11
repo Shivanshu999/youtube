@@ -1,8 +1,8 @@
-import { getCurrrentUser } from "@/app/lib/current-user";
+import { getCurrentUser } from "@/app/lib/current-user";
 import { redirect } from "next/navigation";
 
 export default async function FeedPage() {
-  const user = await getCurrrentUser()
+  const user = await getCurrentUser()
 
   if(!user){
     redirect("/login")
