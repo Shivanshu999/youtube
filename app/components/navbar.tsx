@@ -66,6 +66,9 @@ export default async function Navbar() {
             <div className="px-2 py-1">
               <SignOut />
             </div>
+            
+            <DropdownMenuSeparator className="bg-zinc-900" />
+            
 
             <div className="px-2 py-1">
               <DeleteUserButton />

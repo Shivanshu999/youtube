@@ -5,7 +5,7 @@ export default function DeleteUserButton() {
     <form action={deleteUser}>
       <button
         type="submit"
-        className="bg-red-700 hover:bg-red-600 px-5 py-3 rounded-xl font-semibold transition-all"
+        className="text-red-700 w-full text-left cursor-pointer"
       >
         Delete Account
       </button>

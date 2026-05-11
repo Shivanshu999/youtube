@@ -1,3 +1,4 @@
+"use server"
 import { auth, signOut } from "@/auth";
 import { prisma } from "../lib/prisma";
 import { redirect } from "next/navigation";

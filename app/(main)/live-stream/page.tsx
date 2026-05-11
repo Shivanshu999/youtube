@@ -6,7 +6,7 @@ const page = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-black">
-            Welcome to your playlist page
+            Welcome to your live stream page
           </h1>
 
           <p className="text-zinc-400 mt-2">You are authenticated.</p>

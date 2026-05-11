@@ -19,28 +19,23 @@ model User {
 
   name          String?
   email         String?   @unique
-  emailVerified DateTime?
   image         String?
 
   firstName   String?
   lastName    String?
-  password    String?
   dateOfBirth DateTime?
 
   accounts Account[]
   sessions Session[]
 
   channels Channel[]
-
   subscription ChannelSubscription[]
-
   platformSubscription PlatformSubscription?
 
   like    Like[]
   comment Comment[]
 
   watchHistory WatchHistory[]
-
   playlists Playlist[]
 
   createdAt DateTime @default(now())
