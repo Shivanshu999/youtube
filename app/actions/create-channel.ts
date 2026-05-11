@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "../lib/prisma";
 import { redirect } from "next/navigation";
-
+import { put } from "@vercel/blob";
 export async function createChannel(formData: FormData) {
   const session = await auth();
 
@@ -13,8 +13,30 @@ export async function createChannel(formData: FormData) {
 
   const channelName = formData.get("channelName") as string;
   const description = formData.get("description") as string;
-  const profilePictureUrl = formData.get("profilePicture") as File;
-  const bannerUrl = formData.get("banner") as File;
+  const profileBlob = await put(
+    profilePictureUrl.name,
+
+    profilePictureUrl,
+
+    {
+      access: "public",
+    },
+  );
+
+const bannerBlob = await put(
+
+  bannerUrl.name,
+
+  bannerUrl,
+
+  {
+
+    access: "public",
+
+  }
+
+);
+
 
   if (!channelName || !description || !profilePictureUrl || !bannerUrl) {
     throw new Error("All fields are required");
@@ -41,9 +63,9 @@ export async function createChannel(formData: FormData) {
     data: {
       channelName,
       description,
-      profilePictureUrl: URL.createObjectURL(profilePictureUrl),
-      bannerUrl: URL.createObjectURL(bannerUrl),
       userId: user.id,
+      profilePictureUrl: profileBlob.url,
+      bannerUrl: bannerBlob.url,
     },
   });
 
