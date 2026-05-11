@@ -1,19 +1,188 @@
-import React from 'react'
+"use client";
 
-const page = () => {
+import Image from "next/image";
+import { useState } from "react";
+import { UploadDropzone } from "@/app/lib/uploadthings";
+import { Loader2, UploadCloud } from "lucide-react";
+
+export default function UploadPage() {
+  const [videoUrl, setVideoUrl] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+
   return (
-        <div className="min-h-screen bg-black text-white p-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-black">
-            Welcome to your upload page 
-          </h1>
+    <div className="min-h-screen bg-zinc-950 px-4 py-10 text-white">
+      <div className="mx-auto max-w-5xl">
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold">Upload Video</h1>
+          <p className="mt-2 text-zinc-400">
+            Share your content with the world
+          </p>
+        </div>
 
-          <p className="text-zinc-400 mt-2">You are authenticated.</p>
+        <div className="grid gap-8 lg:grid-cols-2">
+          {/* LEFT SIDE */}
+          <div className="space-y-6">
+            {/* Video Upload */}
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <h2 className="mb-4 text-xl font-semibold">Video</h2>
+
+              {!videoUrl ? (
+                <div className="rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-6 transition hover:border-red-500">
+                  <UploadDropzone
+                    endpoint="videoUploader"
+                    appearance={{
+                      container:
+                        "border-none bg-transparent p-0 min-h-[250px]",
+                      uploadIcon: "text-red-500",
+                      label: "text-white text-lg",
+                      allowedContent: "text-zinc-400",
+                      button:
+                        "bg-red-600 text-white ut-ready:bg-red-600 ut-uploading:bg-red-500 hover:bg-red-700",
+                    }}
+                    onUploadBegin={() => {
+                      setIsUploading(true);
+                    }}
+                    onClientUploadComplete={(res) => {
+                      setVideoUrl(res?.[0]?.ufsUrl);
+                      setIsUploading(false);
+                    }}
+                    onUploadError={(error) => {
+                      console.log(error);
+                      setIsUploading(false);
+                    }}
+                  />
+
+                  {isUploading && (
+                    <div className="mt-4 flex items-center justify-center gap-2 text-sm text-zinc-400">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Uploading video...
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <video
+                  controls
+                  className="h-[300px] w-full rounded-2xl object-cover"
+                  src={videoUrl}
+                />
+              )}
+            </div>
+
+            {/* Thumbnail Upload */}
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <h2 className="mb-4 text-xl font-semibold">Thumbnail</h2>
+
+              {!thumbnailUrl ? (
+                <div className="rounded-2xl border-2 border-dashed border-zinc-700 bg-zinc-950 p-6 transition hover:border-purple-500">
+                  <UploadDropzone
+                    endpoint="imageUploader"
+                    appearance={{
+                      container:
+                        "border-none bg-transparent p-0 min-h-[220px]",
+                      uploadIcon: "text-purple-500",
+                      label: "text-white text-lg",
+                      allowedContent: "text-zinc-400",
+                      button:
+                        "bg-purple-600 text-white ut-ready:bg-purple-600 ut-uploading:bg-purple-500 hover:bg-purple-700",
+                    }}
+                    onClientUploadComplete={(res) => {
+                      setThumbnailUrl(res?.[0]?.ufsUrl);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="relative h-[220px] overflow-hidden rounded-2xl">
+                  <Image
+                    src={thumbnailUrl}
+                    alt="Thumbnail"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT SIDE */}
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-8">
+            <h2 className="mb-8 text-2xl font-bold">Video Details</h2>
+
+            <div className="space-y-6">
+              {/* Title */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-300">
+                  Title
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Enter video title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="h-12 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-white outline-none transition focus:border-red-500"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-zinc-300">
+                  Description
+                </label>
+
+                <textarea
+                  placeholder="Tell viewers about your video"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[140px] w-full rounded-xl border border-zinc-700 bg-zinc-950 p-4 text-white outline-none transition focus:border-red-500"
+                />
+              </div>
+
+              {/* Visibility */}
+              <div>
+                <label className="mb-3 block text-sm font-medium text-zinc-300">
+                  Visibility
+                </label>
+
+                <div className="flex gap-4">
+                  <button className="rounded-xl border border-red-500 bg-red-500/20 px-5 py-3 text-sm font-medium text-red-400">
+                    Public
+                  </button>
+
+                  <button className="rounded-xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-medium text-zinc-300">
+                    Private
+                  </button>
+
+                  <button className="rounded-xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-medium text-zinc-300">
+                    Unlisted
+                  </button>
+                </div>
+              </div>
+
+              {/* Publish */}
+              <button
+                disabled={!videoUrl || isUploading}
+                className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 text-lg font-semibold transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-zinc-700"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="h-5 w-5" />
+                    Publish Video
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
-
-export default page

@@ -2,25 +2,26 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import AuthCard from "../components/auth-card";
 import { prisma } from "@/app/lib/prisma";
-import { channel } from "diagnostics_channel";
 
 export default async function LoginPage() {
   const session = await auth();
 
-  if (!session?.user) {
-    redirect("/login");
+  if (session?.user) {
+    const user = await prisma.user.findUnique({
+        where: {
+            email: session.user.email!,
+        },
+        include: {
+            channels: true
+        }
+    })
+    if(!user?.channels.length){
+        redirect("/create-channel")
+    }
+    redirect("/feed");
   }
   
-  const user = await prisma.user.findUnique({
-    ...
-    include:{
-        channels: true
-    },
-  });
-
-  if(!user?.channels.length){
-    redirect("/create-channel")
-  }
+  
 
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center px-4">

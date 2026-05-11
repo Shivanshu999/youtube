@@ -23,7 +23,6 @@ model User {
 
   firstName   String?
   lastName    String?
-  dateOfBirth DateTime?
 
   accounts Account[]
   sessions Session[]
@@ -177,6 +176,7 @@ model Upload {
   @@index([channelId])
   @@index([createdAt])
 }
+
 
 model Like {
   id     String @id @default(cuid())
