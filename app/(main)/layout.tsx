@@ -11,7 +11,7 @@ export default function MainLayout({
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main>{children}</main>
+        <main className="flex-1 min-w-0">{children}</main>
       </div>
     </div>
   );

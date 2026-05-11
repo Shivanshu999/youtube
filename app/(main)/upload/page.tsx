@@ -35,8 +35,7 @@ export default function UploadPage() {
                   <UploadDropzone
                     endpoint="videoUploader"
                     appearance={{
-                      container:
-                        "border-none bg-transparent p-0 min-h-[250px]",
+                      container: "border-none bg-transparent p-0 min-h-[250px]",
                       uploadIcon: "text-red-500",
                       label: "text-white text-lg",
                       allowedContent: "text-zinc-400",
@@ -81,8 +80,7 @@ export default function UploadPage() {
                   <UploadDropzone
                     endpoint="imageUploader"
                     appearance={{
-                      container:
-                        "border-none bg-transparent p-0 min-h-[220px]",
+                      container: "border-none bg-transparent p-0 min-h-[220px]",
                       uploadIcon: "text-purple-500",
                       label: "text-white text-lg",
                       allowedContent: "text-zinc-400",
@@ -165,6 +163,45 @@ export default function UploadPage() {
               {/* Publish */}
               <button
                 disabled={!videoUrl || isUploading}
+                onClick={async () => {
+                  try {
+                    setIsUploading(true);
+
+                    const response = await fetch("/api/upload", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        title,
+                        description,
+                        videoUrl,
+                        thumbnailUrl,
+                      }),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error("Failed to upload video");
+                    }
+
+                    const data = await response.json();
+
+                    console.log(data);
+
+                    alert("Video uploaded successfully!");
+
+                    // reset form
+                    setTitle("");
+                    setDescription("");
+                    setVideoUrl("");
+                    setThumbnailUrl("");
+                  } catch (error) {
+                    console.log(error);
+                    alert("Something went wrong");
+                  } finally {
+                    setIsUploading(false);
+                  }
+                }}
                 className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 text-lg font-semibold transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-zinc-700"
               >
                 {isUploading ? (
