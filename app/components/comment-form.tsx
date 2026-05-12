@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface CommentFormProps {
   videoId: string;
@@ -26,8 +27,8 @@ export default function CommentForm({
     try {
       setLoading(true);
 
-      const res = await fetch(
-        `/api/videos/${videoId}/comment`,
+const res = await fetch(
+  `/api/view-video/videos/${videoId}/comments`,
         {
           method: "POST",
 
@@ -50,10 +51,15 @@ export default function CommentForm({
 
       setText("");
 
+toast.success("Comment added");
+
+router.refresh();
+
       // refresh server component data
       router.refresh();
     } catch (e) {
       console.log(e);
+      toast.error("Failed to add comment");
     } finally {
       setLoading(false);
     }

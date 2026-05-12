@@ -1,19 +1,79 @@
-import React from 'react'
+import { auth } from "@/auth";
+import { prisma } from "@/app/lib/prisma";
+import Link from "next/link";
+import Image from "next/image";
 
-const page = () => {
+export default async function HistoryPage() {
+  const session = await auth();
+
+  if (!session?.user?.email) {
+    return <div>Please login</div>;
+  }
+
+  const history =
+    await prisma.watchHistory.findMany({
+      where: {
+        user: {
+          email: session.user.email,
+        },
+      },
+
+      include: {
+        video: {
+          include: {
+            channel: true,
+          },
+        },
+      },
+
+      orderBy: {
+        watchedAt: "desc",
+      },
+    });
+
   return (
-        <div className="min-h-screen bg-black text-white p-10">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-4xl font-black">
-            Welcome to your history
-          </h1>
+    <div className="mx-auto max-w-5xl p-6">
+      <h1 className="mb-6 text-3xl font-bold">
+        Watch History
+      </h1>
 
-          <p className="text-zinc-400 mt-2">You are authenticated.</p>
-        </div>
+      <div className="space-y-4">
+        {history.map((item) => (
+          <Link
+            key={item.id}
+            href={`/watch/${item.video.id}`}
+            className="flex gap-4 rounded-xl bg-zinc-900 p-4 transition hover:bg-zinc-800"
+          >
+            <Image
+              src={item.video.thumbnailUrl}
+              alt={item.video.title}
+              width={220}
+              height={120}
+              className="rounded-lg object-cover"
+            />
+
+            <div>
+              <h2 className="text-lg font-semibold">
+                {item.video.title}
+              </h2>
+
+              <p className="text-sm text-zinc-400">
+                {
+                  item.video.channel
+                    .channelName
+                }
+              </p>
+
+              <p className="mt-2 text-xs text-zinc-500">
+                Watched{" "}
+                {new Date(
+                  item.watchedAt
+                ).toLocaleString()}
+              </p>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
-  )
+  );
 }
-
-export default page
