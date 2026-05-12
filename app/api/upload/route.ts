@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       channelId: user.channels[0].id,
     },
   });
+  
 
   return NextResponse.json(video);
 }
