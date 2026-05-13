@@ -1,4 +1,5 @@
 import { prisma } from "@/app/lib/prisma";
+import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import IncrementView from "../../../components/increment-view";
 import LikeButton from "../../../components/like-button";
@@ -8,6 +9,47 @@ interface WatchPageProps {
   params: Promise<{
     videoId: string;
   }>;
+}
+
+async function trackWatchHistory(videoId: string) {
+  const session = await auth();
+
+  if (!session?.user?.email) {
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: session.user.email,
+    },
+
+    select: {
+      id: true,
+    },
+  });
+
+  if (!user) {
+    return;
+  }
+
+  await prisma.watchHistory.upsert({
+    where: {
+      userId_videoId: {
+        userId: user.id,
+        videoId,
+      },
+    },
+
+    update: {
+      watchedAt: new Date(),
+    },
+
+    create: {
+      userId: user.id,
+      videoId,
+      watchedAt: new Date(),
+    },
+  });
 }
 
 function formatViews(count: number): string {
@@ -51,6 +93,12 @@ export default async function WatchPage({
 
   if (!video) {
     notFound();
+  }
+
+  try {
+    await trackWatchHistory(video.id);
+  } catch (error) {
+    console.error("Failed to track watch history", error);
   }
 
   return (

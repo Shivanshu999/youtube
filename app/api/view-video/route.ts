@@ -10,18 +10,14 @@ export async function POST(req: NextRequest) {
     const videoId = body.videoId;
 
     if (!videoId) {
-      return NextResponse.json(
-        { error: "Video ID required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Video ID required" }, { status: 400 });
     }
 
     const session = await auth();
 
     const cookieStore = await cookies();
 
-    const alreadyViewed =
-      cookieStore.get(`viewed-${videoId}`);
+    const alreadyViewed = cookieStore.get(`viewed-${videoId}`);
 
     // increment view only once in 24h
     if (!alreadyViewed) {
@@ -38,25 +34,20 @@ export async function POST(req: NextRequest) {
       });
 
       // set cookie
-      cookieStore.set(
-        `viewed-${videoId}`,
-        "true",
-        {
-          maxAge: 60 * 60 * 24,
-          httpOnly: true,
-          sameSite: "lax",
-        }
-      );
+      cookieStore.set(`viewed-${videoId}`, "true", {
+        maxAge: 60 * 60 * 24,
+        httpOnly: true,
+        sameSite: "lax",
+      });
     }
 
     // always update history for logged in users
     if (session?.user?.email) {
-      const user =
-        await prisma.user.findUnique({
-          where: {
-            email: session.user.email,
-          },
-        });
+      const user = await prisma.user.findUnique({
+        where: {
+          email: session.user.email,
+        },
+      });
 
       if (user) {
         await prisma.watchHistory.upsert({
@@ -74,6 +65,8 @@ export async function POST(req: NextRequest) {
           create: {
             userId: user.id,
             videoId,
+            watchedAt: new Date(),
+            updatedAt: new Date(),
           },
         });
       }
@@ -88,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { error: "Something went wrong" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

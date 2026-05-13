@@ -9,19 +9,25 @@ interface IncrementViewProps {
 export default function IncrementView({
   videoId,
 }: IncrementViewProps) {
-  useEffect(() => {
-    fetch("/api/view-video", {
+useEffect(() => {
+  async function increment() {
+    const res = await fetch("/api/view-video", {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify({
         videoId,
       }),
     });
-  }, [videoId]);
+
+    const data = await res.json();
+
+    console.log(data);
+  }
+
+  increment();
+}, [videoId]);
 
   return null;
 }
