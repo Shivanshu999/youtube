@@ -208,7 +208,7 @@ export default async function HistoryPage() {
               <Link
                 key={item.id}
                 href={`/watch/${item.video.id}`}
-                className="group block overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/70 p-3 shadow-[0_10px_35px_rgba(0,0,0,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20"
+                className="group block rounded-2xl border border-white/10 bg-zinc-950/70 p-3 shadow-[0_10px_35px_rgba(0,0,0,0.32)] transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20"
               >
                 <div className="flex flex-col gap-4 sm:flex-row">
                   <div className="relative aspect-video w-full overflow-hidden rounded-xl sm:w-[280px] sm:shrink-0">
@@ -238,26 +238,23 @@ export default async function HistoryPage() {
                       </p>
                     </div>
 
-<div className="mt-4 flex items-center justify-between gap-4">
-  <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
-      <Clock3 size={13} />
-      {timeAgo(item.watchedAt)}
-    </span>
+                    <div className="mt-4 flex items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-400">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1">
+                          <Clock3 size={13} />
+                          {timeAgo(item.watchedAt)}
+                        </span>
 
-    <span>
-      Watched on{" "}
-      {new Date(
-        item.watchedAt
-      ).toLocaleString()}
-    </span>
-  </div>
+                        <span>
+                          Watched on {new Date(item.watchedAt).toLocaleString()}
+                        </span>
+                      </div>
 
-  <HistoryVideoMenu
-    historyId={item.id}
-    uploadId={item.video.id}
-  />
-</div>
+                      <HistoryVideoMenu
+                        historyId={item.id}
+                        uploadId={item.video.id}
+                      />
+                    </div>
                   </div>
                 </div>
               </Link>

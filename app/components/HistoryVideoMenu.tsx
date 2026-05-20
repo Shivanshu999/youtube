@@ -140,45 +140,46 @@ export default function HistoryVideoMenu({
         <EllipsisVertical size={18} />
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950/95 shadow-2xl backdrop-blur-xl">
-          <button
-            onClick={addToWatchLater}
-            disabled={loading}
-            className="flex w-full items-center gap-3 px-4 py-3 text-sm text-zinc-200 transition hover:bg-white/5 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <Loader2
-                size={16}
-                className="animate-spin"
-              />
-            ) : (
-              <Clock3 size={16} />
-            )}
-
-            Add to Watch Later
-          </button>
-
-          <div className="h-px bg-white/10" />
-
-          <button
-            onClick={removeFromHistory}
-            disabled={loading}
-            className="flex w-full items-center gap-3 px-4 py-3 text-sm text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <Loader2
-                size={16}
-                className="animate-spin"
-              />
-            ) : (
-              <Trash2 size={16} />
-            )}
-
-            Remove from History
-          </button>
-        </div>
+{open && (
+  <div className="absolute right-0 top-12 z-[999] w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#181818]/95 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-100">
+    
+    <button
+      onClick={addToWatchLater}
+      disabled={loading}
+      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-zinc-200 transition-all hover:bg-white/10 hover:text-white disabled:cursor-not-allowed"
+    >
+      {loading ? (
+        <Loader2
+          size={16}
+          className="animate-spin"
+        />
+      ) : (
+        <Clock3 size={16} />
       )}
+
+      Add to Watch Later
+    </button>
+
+    <div className="my-1 h-px bg-white/10" />
+
+    <button
+      onClick={removeFromHistory}
+      disabled={loading}
+      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 disabled:cursor-not-allowed"
+    >
+      {loading ? (
+        <Loader2
+          size={16}
+          className="animate-spin"
+        />
+      ) : (
+        <Trash2 size={16} />
+      )}
+
+      Remove from History
+    </button>
+  </div>
+)}
     </div>
   );
 }

@@ -17,26 +17,26 @@ datasource db {
 model User {
   id String @id @default(cuid())
 
-  name          String?
-  email         String?   @unique
-  image         String?
+  name  String?
+  email String? @unique
+  image String?
 
-  firstName   String?
-  lastName    String?
+  firstName String?
+  lastName  String?
 
   accounts Account[]
   sessions Session[]
 
-  channels Channel[]
-  subscription ChannelSubscription[]
+  channels             Channel[]
+  subscription         ChannelSubscription[]
   platformSubscription PlatformSubscription?
 
   like    Like[]
   comment Comment[]
 
   watchHistory WatchHistory[]
-  watchLater WatchLater[]
-  playlists Playlist[]
+  watchLater   WatchLater[]
+  playlists    Playlist[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -156,29 +156,29 @@ enum UploadStatus {
 }
 
 model Upload {
-  id           String         @id @default(cuid())
-  channelId    String
-  channel      Channel        @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  videoUrl     String
-  thumbnailUrl String
-  title        String         @db.Text
-  description  String         @db.Text
-  type         VideoType
-  like         Like[]
-  comment      Comment[]
-  playlists    Playlist[]
-  deletedAt    DateTime?
-  watchHistory WatchHistory[]
-  watchLater WatchLater[]
-  viewCount    Int            @default(0)
-  status       UploadStatus   @default(PROCESSING)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id             String          @id @default(cuid())
+  channelId      String
+  channel        Channel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  videoUrl       String
+  thumbnailUrl   String
+  title          String          @db.Text
+  description    String          @db.Text
+  type           VideoType
+  like           Like[]
+  comment        Comment[]
+  playlists      Playlist[]
+  playlistVideos PlaylistVideo[]
+  deletedAt      DateTime?
+  watchHistory   WatchHistory[]
+  watchLater     WatchLater[]
+  viewCount      Int             @default(0)
+  status         UploadStatus    @default(PROCESSING)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([channelId])
   @@index([createdAt])
 }
-
 
 model Like {
   id     String @id @default(cuid())
@@ -226,17 +226,41 @@ model Comment {
 }
 
 model Playlist {
-  id          String   @id @default(cuid())
-  name        String
-  description String?  @db.Text
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  videos      Upload[] // NEW: Implicit many-to-many
+  id          String  @id @default(cuid())
+  title       String
+  description String? @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  playlistVideos PlaylistVideo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  upload    Upload?  @relation(fields: [uploadId], references: [id])
+  uploadId  String?
+
+  @@index([userId])
+}
+
+model PlaylistVideo {
+  id String @id @default(cuid())
+
+  playlistId String
+  uploadId   String
+
+  order Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  upload Upload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  @@unique([playlistId, uploadId])
+  @@index([playlistId])
+  @@index([uploadId])
 }
 
 enum StreamStatus {
@@ -283,20 +307,18 @@ model WatchHistory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-
   @@unique([userId, videoId])
   @@index([userId])
   @@index([videoId])
   @@index([watchedAt])
 }
 
-
-model WatchLater{
+model WatchLater {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  uploadId   String
-  upload     Upload   @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+  uploadId  String
+  upload    Upload   @relation(fields: [uploadId], references: [id], onDelete: Cascade)
   addedAt   DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
