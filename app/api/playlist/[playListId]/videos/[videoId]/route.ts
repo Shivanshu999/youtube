@@ -9,10 +9,10 @@ interface Params{
 
 export async function DELETE(req: NextRequest, {params}: Params) {
     try{
-        const uploadId = await params;
+        const {uploadId} = await params;
         await prisma.playlistVideo.delete({
             where: {
-                id: uploadId.uploadId
+                id: uploadId
             }
         })
 

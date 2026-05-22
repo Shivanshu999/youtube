@@ -8,23 +8,25 @@ import {
   ListVideo,
 } from "lucide-react";
 
-interface PageProps {
-  params: Promise<{
-    playlistId: string;
-  }>;
+import PlaylistVideoPlayer from "../../../components/playlist-video-player";
 
-  searchParams: Promise<{
+interface PageProps {
+  params: {
+    playlistId: string;
+  };
+
+  searchParams: {
     video?: string;
-  }>;
+  };
 }
 
 export default async function PlaylistPage({
   params,
   searchParams,
 }: PageProps) {
-  const { playlistId } = await params;
+  const { playlistId } = params;
 
-  const { video } = await searchParams;
+  const { video } = searchParams;
 
   const playlist =
     await prisma.playlist.findUnique({
@@ -33,7 +35,7 @@ export default async function PlaylistPage({
       },
 
       include: {
-        videos: {
+        playlistVideos: {
           include: {
             upload: {
               include: {
@@ -57,43 +59,57 @@ export default async function PlaylistPage({
     );
   }
 
+  if (
+    playlist.playlistVideos.length === 0
+  ) {
+    return (
+      <div className="p-10 text-white">
+        Playlist is empty
+      </div>
+    );
+  }
+
   const currentVideo =
-    playlist.videos.find(
+    playlist.playlistVideos.find(
       (item) => item.upload.id === video
-    ) || playlist.videos[0];
+    ) || playlist.playlistVideos[0];
 
   const currentIndex =
-    playlist.videos.findIndex(
+    playlist.playlistVideos.findIndex(
       (item) =>
         item.upload.id ===
         currentVideo.upload.id
     );
 
   const nextVideo =
-    playlist.videos[currentIndex + 1];
+    playlist.playlistVideos[
+      currentIndex + 1
+    ];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <div className="mx-auto flex max-w-[1700px] flex-col gap-6 px-4 py-6 lg:flex-row">
         <div className="flex-1">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
-            <video
-              key={currentVideo.upload.videoUrl}
-              src={currentVideo.upload.videoUrl}
-              controls
-              autoPlay
-              className="aspect-video w-full"
-              onEnded={() => {
-                if (nextVideo) {
-                  window.location.href = `/playlist/${playlist.id}?video=${nextVideo.upload.id}`;
-                }
-              }}
+            <PlaylistVideoPlayer
+              videoUrl={
+                currentVideo.upload
+                  .videoUrl
+              }
+              nextVideoUrl={
+                nextVideo
+                  ? `/playlist/${playlist.id}?video=${nextVideo.upload.id}`
+                  : undefined
+              }
             />
           </div>
 
           <div className="mt-5 rounded-2xl border border-white/10 bg-zinc-950/70 p-5">
             <h1 className="text-3xl font-black">
-              {currentVideo.upload.title}
+              {
+                currentVideo.upload
+                  .title
+              }
             </h1>
 
             <p className="mt-3 text-zinc-400">
@@ -116,12 +132,16 @@ export default async function PlaylistPage({
             </div>
 
             <p className="mt-2 text-sm text-zinc-400">
-              {playlist.videos.length} videos
+              {
+                playlist.playlistVideos
+                  .length
+              }{" "}
+              videos
             </p>
           </div>
 
           <div className="max-h-[75vh] overflow-y-auto">
-            {playlist.videos.map(
+            {playlist.playlistVideos.map(
               (item, index) => {
                 const isActive =
                   item.upload.id ===
