@@ -1,15 +1,16 @@
 import { prisma } from "@/app/lib/prisma";
-import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-interface Params{
-    params: Promise<{uploadId: string}>
+interface Params {
+  params: {
+    uploadId: string;
+  };
 }
 
 
 export async function DELETE(req: NextRequest, {params}: Params) {
     try{
-        const {uploadId} = await params;
+        const {uploadId} = params;
         await prisma.playlistVideo.delete({
             where: {
                 id: uploadId

@@ -15,6 +15,7 @@ interface PageProps {
     playlistId: string;
   };
 
+
   searchParams: {
     video?: string;
   };
