@@ -10,6 +10,7 @@ import {
   Users,
   Video,
 } from "lucide-react";
+import FeedVideoActions from "@/app/components/feed-video-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -208,76 +209,90 @@ export default async function FeedPage() {
         ) : (
           /* VIDEO GRID */
           <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {videos.map((video) => (
-              <Link
-                key={video.id}
-                href={`/watch/${video.id}`}
-                className="group rounded-2xl border border-white/10 bg-zinc-950/70 p-2 shadow-[0_10px_35px_rgba(0,0,0,0.32)] transition-all duration-300 hover:-translate-y-1 hover:border-white/25"
-              >
-                {/* THUMBNAIL */}
-                <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-900">
-                  <Image
-                    src={video.thumbnailUrl}
-                    alt={video.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw,
-                    (max-width: 1280px) 50vw,
-                    25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+            {videos.map((video) => {
+              const watchHref = `/watch/${video.id}`;
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-
-                  <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white">
-                    {timeAgo(video.createdAt)}
-                  </div>
-                </div>
-
-                {/* CONTENT */}
-                <div className="flex gap-3 px-2 pb-3 pt-3">
-                  {/* CHANNEL AVATAR */}
-                  <div className="shrink-0">
-                    {video.channel.profilePictureUrl ? (
+              return (
+                <article
+                  key={video.id}
+                  className="group rounded-2xl border border-white/10 bg-zinc-950/70 p-2 shadow-[0_10px_35px_rgba(0,0,0,0.32)] transition-all duration-300 hover:-translate-y-1 hover:border-white/25"
+                >
+                  {/* THUMBNAIL */}
+                  <Link
+                    href={watchHref}
+                    className="block"
+                  >
+                    <div className="relative aspect-video overflow-hidden rounded-xl bg-zinc-900">
                       <Image
-                        src={
-                          video.channel
-                            .profilePictureUrl
-                        }
-                        alt={
-                          video.channel.channelName
-                        }
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 rounded-full border border-white/10 object-cover"
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw,
+                        (max-width: 1280px) 50vw,
+                        25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-sm font-bold text-white">
-                        {video.channel.channelName
-                          .charAt(0)
-                          .toUpperCase()}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+
+                      <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white">
+                        {timeAgo(video.createdAt)}
                       </div>
-                    )}
+                    </div>
+                  </Link>
+
+                  {/* CONTENT */}
+                  <div className="flex gap-3 px-2 pb-3 pt-3">
+                    {/* CHANNEL AVATAR */}
+                    <div className="shrink-0">
+                      {video.channel.profilePictureUrl ? (
+                        <Image
+                          src={
+                            video.channel
+                              .profilePictureUrl
+                          }
+                          alt={
+                            video.channel.channelName
+                          }
+                          width={40}
+                          height={40}
+                          className="h-10 w-10 rounded-full border border-white/10 object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-sm font-bold text-white">
+                          {video.channel.channelName
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* VIDEO INFO */}
+                    <div className="min-w-0 flex-1">
+                      <Link href={watchHref}>
+                        <h2 className="line-clamp-2 text-[15px] font-semibold leading-5 text-white">
+                          {video.title}
+                        </h2>
+                      </Link>
+
+                      <p className="mt-1 truncate text-sm text-zinc-400 transition group-hover:text-zinc-300">
+                        {video.channel.channelName}
+                      </p>
+
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-zinc-500">
+                        <Eye size={13} />
+                        {formatViews(video.viewCount)}{" "}
+                        views
+                      </p>
+
+                      <FeedVideoActions
+                        videoId={video.id}
+                      />
+                    </div>
                   </div>
-
-                  {/* VIDEO INFO */}
-                  <div className="min-w-0 flex-1">
-                    <h2 className="line-clamp-2 text-[15px] font-semibold leading-5 text-white">
-                      {video.title}
-                    </h2>
-
-                    <p className="mt-1 truncate text-sm text-zinc-400 transition group-hover:text-zinc-300">
-                      {video.channel.channelName}
-                    </p>
-
-                    <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-zinc-500">
-                      <Eye size={13} />
-                      {formatViews(video.viewCount)}{" "}
-                      views
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </article>
+              );
+            })}
           </section>
         )}
       </div>

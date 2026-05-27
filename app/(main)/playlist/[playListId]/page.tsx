@@ -11,23 +11,25 @@ import {
 import PlaylistVideoPlayer from "../../../components/playlist-video-player";
 
 interface PageProps {
-  params: {
-    playlistId: string;
-  };
-
-
-  searchParams: {
-    video?: string;
-  };
+  params: Promise<{
+    playListId: string;
+  }>;
+  searchParams: Promise<{
+    video?: string | string[];
+  }>;
 }
 
 export default async function PlaylistPage({
   params,
   searchParams,
 }: PageProps) {
-  const { playlistId } = params;
+  const { playListId: playlistId } =
+    await params;
 
-  const { video } = searchParams;
+  const { video } = await searchParams;
+  const videoId = Array.isArray(video)
+    ? video[0]
+    : video;
 
   const playlist =
     await prisma.playlist.findUnique({
@@ -72,7 +74,7 @@ export default async function PlaylistPage({
 
   const currentVideo =
     playlist.playlistVideos.find(
-      (item) => item.upload.id === video
+      (item) => item.upload.id === videoId
     ) || playlist.playlistVideos[0];
 
   const currentIndex =

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import HlsVideoPlayer from "@/app/components/hls-video-player";
 
 interface PlaylistVideoPlayerProps {
   videoUrl: string;
@@ -14,8 +15,7 @@ export default function PlaylistVideoPlayer({
   const router = useRouter();
 
   return (
-    <video
-      key={videoUrl}
+    <HlsVideoPlayer
       src={videoUrl}
       controls
       autoPlay

@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import IncrementView from "../../../components/increment-view";
 import LikeButton from "../../../components/like-button";
 import CommentForm from "@/app/components/comment-form";
+import AddToPlaylistMenu from "@/app/components/add-to-playlist-menu";
+import AddToWatchLaterButton from "@/app/components/add-to-watch-later-button";
+import HlsVideoPlayer from "@/app/components/hls-video-player";
 
 interface WatchPageProps {
   params: Promise<{
@@ -109,11 +112,33 @@ export default async function WatchPage({
       <div className="mx-auto max-w-6xl">
         {/* VIDEO */}
         <div className="overflow-hidden rounded-2xl bg-zinc-900">
-          <video
-            controls
-            src={video.videoUrl}
-            className="aspect-video w-full"
-          />
+          {video.status === "READY" ? (
+            <HlsVideoPlayer
+              src={video.videoUrl}
+              controls
+              className="aspect-video w-full"
+            />
+          ) : video.status === "PROCESSING" ? (
+            <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-zinc-950 p-8 text-center">
+              <p className="text-lg font-semibold">
+                Video is still processing
+              </p>
+              <p className="max-w-md text-sm text-zinc-400">
+                We are transcoding this upload into adaptive HLS streams.
+                Refresh in a minute or check the feed later.
+              </p>
+            </div>
+          ) : (
+            <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-zinc-950 p-8 text-center">
+              <p className="text-lg font-semibold text-red-400">
+                Processing failed
+              </p>
+              <p className="max-w-md text-sm text-zinc-400">
+                This video could not be transcoded. Try uploading again from
+                the upload page.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* DETAILS */}
@@ -146,13 +171,23 @@ export default async function WatchPage({
               </div>
             </div>
 
-            {/* LIKE BUTTON */}
-            <LikeButton
-              videoId={video.id}
-              initialLikes={
-                video.like.length
-              }
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              {/* LIKE BUTTON */}
+              <LikeButton
+                videoId={video.id}
+                initialLikes={
+                  video.like.length
+                }
+              />
+
+              <AddToWatchLaterButton
+                videoId={video.id}
+              />
+
+              <AddToPlaylistMenu
+                videoId={video.id}
+              />
+            </div>
           </div>
 
           {/* DESCRIPTION */}

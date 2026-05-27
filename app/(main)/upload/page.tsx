@@ -10,7 +10,8 @@ export default function UploadPage() {
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [isTranscoding, setIsTranscoding] = useState(false);
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-10 text-white">
@@ -43,22 +44,22 @@ export default function UploadPage() {
                         "bg-red-600 text-white ut-ready:bg-red-600 ut-uploading:bg-red-500 hover:bg-red-700",
                     }}
                     onUploadBegin={() => {
-                      setIsUploading(true);
+                      setIsUploadingFile(true);
                     }}
                     onClientUploadComplete={(res) => {
                       setVideoUrl(res?.[0]?.ufsUrl);
-                      setIsUploading(false);
+                      setIsUploadingFile(false);
                     }}
                     onUploadError={(error) => {
                       console.log(error);
-                      setIsUploading(false);
+                      setIsUploadingFile(false);
                     }}
                   />
 
-                  {isUploading && (
+                  {isUploadingFile && (
                     <div className="mt-4 flex items-center justify-center gap-2 text-sm text-zinc-400">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Uploading video...
+                      Uploading video to storage...
                     </div>
                   )}
                 </div>
@@ -162,10 +163,16 @@ export default function UploadPage() {
 
               {/* Publish */}
               <button
-                disabled={!videoUrl || isUploading}
+                disabled={
+                  !videoUrl ||
+                  !thumbnailUrl ||
+                  !title.trim() ||
+                  isUploadingFile ||
+                  isTranscoding
+                }
                 onClick={async () => {
                   try {
-                    setIsUploading(true);
+                    setIsTranscoding(true);
 
                     const response = await fetch("/api/upload", {
                       method: "POST",
@@ -180,34 +187,39 @@ export default function UploadPage() {
                       }),
                     });
 
+                    const data = await response.json().catch(() => null);
+
                     if (!response.ok) {
-                      throw new Error("Failed to upload video");
+                      throw new Error(
+                        typeof data?.error === "string"
+                          ? data.error
+                          : "Failed to publish video"
+                      );
                     }
 
-                    const data = await response.json();
+                    alert("Video published and transcoded successfully!");
 
-                    console.log(data);
-
-                    alert("Video uploaded successfully!");
-
-                    // reset form
                     setTitle("");
                     setDescription("");
                     setVideoUrl("");
                     setThumbnailUrl("");
                   } catch (error) {
-                    console.log(error);
-                    alert("Something went wrong");
+                    console.error(error);
+                    alert(
+                      error instanceof Error
+                        ? error.message
+                        : "Something went wrong"
+                    );
                   } finally {
-                    setIsUploading(false);
+                    setIsTranscoding(false);
                   }
                 }}
                 className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 text-lg font-semibold transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-zinc-700"
               >
-                {isUploading ? (
+                {isTranscoding ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Uploading...
+                    Transcoding to HLS (this may take a few minutes)...
                   </>
                 ) : (
                   <>

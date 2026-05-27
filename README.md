@@ -1,5 +1,37 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Video transcoding (HLS)
+
+Uploads are transcoded on the server with **FFmpeg** into multi-bitrate HLS (`.m3u8` + `.ts` segments) and served from `public/streams/`.
+
+### Requirements
+
+Install FFmpeg and FFprobe on your machine:
+
+```bash
+# macOS (Homebrew)
+brew install ffmpeg
+
+# Ubuntu / Debian
+sudo apt install ffmpeg
+```
+
+Verify:
+
+```bash
+ffmpeg -version
+ffprobe -version
+```
+
+### Flow
+
+1. User uploads the raw MP4 to UploadThing from the upload page.
+2. `POST /api/upload` saves the row as `PROCESSING`, downloads the source, runs `transcodeToMultibitrateHls`, then sets `videoUrl` to `/streams/{id}/master.m3u8` and `status` to `READY`.
+3. The watch page plays HLS via `HlsVideoPlayer` (native Safari / `hls.js` elsewhere).
+4. The feed only lists videos with `status: READY`.
+
+Transcoded files live under `public/streams/` (gitignored). For production, consider a background job queue so transcoding does not block the HTTP request.
+
 ## Getting Started
 
 First, run the development server:
