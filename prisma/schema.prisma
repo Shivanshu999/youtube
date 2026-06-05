@@ -30,6 +30,7 @@ model User {
   channels             Channel[]
   subscription         ChannelSubscription[]
   platformSubscription PlatformSubscription?
+  streamChatMessages   StreamChatMessage[]
 
   like    Like[]
   comment Comment[]
@@ -156,28 +157,45 @@ enum UploadStatus {
 }
 
 model Upload {
-  id             String          @id @default(cuid())
-  channelId      String
-  channel        Channel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  videoUrl       String
-  thumbnailUrl   String
-  title          String          @db.Text
-  description    String          @db.Text
-  type           VideoType
+  id String @id @default(cuid())
+
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  originalVideoUrl String?
+  playbackUrl      String?
+
+  thumbnailUrl String?
+
+  title       String @db.Text
+  description String @db.Text
+
+  duration Int?
+
+  type VideoType
+
+  status UploadStatus @default(PROCESSING)
+
+  viewCount Int @default(0)
+
+  deletedAt DateTime?
+
   like           Like[]
   comment        Comment[]
-  playlists      Playlist[]
   playlistVideos PlaylistVideo[]
-  deletedAt      DateTime?
   watchHistory   WatchHistory[]
   watchLater     WatchLater[]
-  viewCount      Int             @default(0)
-  status         UploadStatus    @default(PROCESSING)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+
+  variants VideoVariant[]
+
+  processingJobs VideoProcessingJob[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([channelId])
   @@index([createdAt])
+  @@index([status])
 }
 
 model Like {
@@ -237,6 +255,7 @@ model Playlist {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@index([userId])
 }
 
@@ -267,27 +286,44 @@ enum StreamStatus {
 }
 
 model LiveStream {
-  id                String       @id @default(cuid())
-  title             String       @db.Text
-  description       String       @db.Text
-  thumbnailUrl      String?
-  streamUrl         String?
-  streamKey         String       @unique
-  isChatEnabled     Boolean      @default(true)
-  concurrentViewers Int          @default(0)
-  totalViews        Int          @default(0)
-  status            StreamStatus @default(SCHEDULED)
-  scheduledFor      DateTime?
-  channelId         String
-  channel           Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  comments          Comment[]
-  like              Like[]
-  deletedAt         DateTime?
-  recordingUrl      String?
-  startedAt         DateTime?
-  endedAt           DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id String @id @default(cuid())
+
+  title       String @db.Text
+  description String @db.Text
+
+  thumbnailUrl String?
+
+  ingestUrl   String?
+  playbackUrl String?
+
+  streamKey String @unique
+
+  isChatEnabled Boolean @default(true)
+
+  concurrentViewers Int @default(0)
+  totalViews        Int @default(0)
+
+  status StreamStatus @default(SCHEDULED)
+
+  scheduledFor DateTime?
+
+  recordingUrl String?
+
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  comments     Comment[]
+  chatMessages StreamChatMessage[]
+
+  like Like[]
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([channelId])
   @@index([status])
@@ -323,4 +359,78 @@ model WatchLater {
   @@unique([userId, uploadId])
   @@index([userId])
   @@index([uploadId])
+}
+
+enum ProcessingJobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model VideoProcessingJob {
+  id String @id @default(cuid())
+
+  uploadId String
+  upload   Upload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  status ProcessingJobStatus @default(QUEUED)
+
+  progress Int @default(0)
+
+  retryCount Int @default(0)
+
+  errorMessage String? @db.Text
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([uploadId])
+  @@index([status])
+}
+
+model StreamChatMessage {
+  id String @id @default(cuid())
+
+  streamId String
+  stream   LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  message String @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([streamId])
+  @@index([createdAt])
+}
+
+model VideoVariant {
+  id String @id @default(cuid())
+
+  uploadId String
+  upload   Upload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  resolution String
+  bitrate    Int
+
+  playlistUrl String
+
+  createdAt DateTime @default(now())
+
+  @@unique([uploadId, resolution])
+  @@index([uploadId])
+}
+
+enum VideoResolution {
+  P360
+  P480
+  P720
+  P1080
+  P1440
+  P2160
 }
