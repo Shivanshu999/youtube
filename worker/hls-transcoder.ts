@@ -1,4 +1,6 @@
+//hls-transcoder.ts
 import { spawn } from "node:child_process";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { createWriteStream } from "node:fs";
 import {
   access,
@@ -31,6 +33,12 @@ interface ProbeResult {
 export interface HlsTranscodeResult {
   masterPlaylistPath: string;
   outputDirectory: string;
+
+  variants: {
+    resolution: string;
+    bitrate: number;
+    playlistUrl: string;
+  }[];
 }
 
 const LADDER: Rendition[] = [
@@ -143,10 +151,12 @@ async function downloadSourceFile(
     );
   }
 
-  await pipeline(
-    Readable.fromWeb(response.body as ReadableStream),
-    createWriteStream(destinationPath)
-  );
+await pipeline(
+  Readable.fromWeb(
+    response.body as NodeReadableStream
+  ),
+  createWriteStream(destinationPath)
+);
 }
 
 async function probeMedia(
@@ -384,10 +394,19 @@ export async function transcodeToMultibitrateHls({
 
     await access(masterPath);
 
-    return {
-      masterPlaylistPath: `/streams/${videoId}/master.m3u8`,
-      outputDirectory,
-    };
+return {
+  masterPlaylistPath: `/streams/${videoId}/master.m3u8`,
+  outputDirectory,
+
+  variants: renditions.map((rendition, index) => ({
+    resolution: rendition.name,
+    bitrate: Number.parseInt(
+      rendition.videoBitrate.replace("k", ""),
+      10
+    ),
+    playlistUrl: `/streams/${videoId}/v${index}/index.m3u8`,
+  })),
+};
   } finally {
     await unlink(temporarySourcePath).catch(() => {
       return;

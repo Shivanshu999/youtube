@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import { UploadDropzone } from "@/app/lib/uploadthings";
 import { Loader2, UploadCloud } from "lucide-react";
-
 export default function UploadPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
@@ -12,6 +12,19 @@ export default function UploadPage() {
   const [description, setDescription] = useState("");
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isTranscoding, setIsTranscoding] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [processingProgress, setProcessingProgress] = useState(0);
+
+  const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-950 px-4 py-10 text-white">
@@ -90,6 +103,8 @@ export default function UploadPage() {
                     }}
                     onClientUploadComplete={(res) => {
                       setThumbnailUrl(res?.[0]?.ufsUrl);
+                      setProcessingStatus(null);
+                      setProcessingProgress(0);
                     }}
                   />
                 </div>
@@ -162,6 +177,25 @@ export default function UploadPage() {
               </div>
 
               {/* Publish */}
+
+              {processingStatus && (
+                <div className="rounded-xl border border-zinc-700 bg-zinc-950 p-4">
+                  <div className="mb-2 flex justify-between text-sm">
+                    <span>{processingStatus}</span>
+
+                    <span>{processingProgress}%</span>
+                  </div>
+
+                  <div className="h-2 w-full rounded bg-zinc-800">
+                    <div
+                      className="h-2 rounded bg-red-500 transition-all duration-500"
+                      style={{
+                        width: `${processingProgress}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               <button
                 disabled={
                   !videoUrl ||
@@ -187,31 +221,81 @@ export default function UploadPage() {
                       }),
                     });
 
-                    const data = await response.json().catch(() => null);
+                    const data = await response.json();
 
                     if (!response.ok) {
-                      throw new Error(
-                        typeof data?.error === "string"
-                          ? data.error
-                          : "Failed to publish video"
-                      );
+                      throw new Error(data?.error ?? "Failed to upload video");
                     }
 
-                    alert("Video published and transcoded successfully!");
+                    const uploadId = data.uploadId;
 
-                    setTitle("");
-                    setDescription("");
-                    setVideoUrl("");
-                    setThumbnailUrl("");
+                    setProcessingStatus("QUEUED");
+
+                    intervalRef.current = setInterval(async () => {
+                      try {
+                        const statusResponse = await fetch(
+                          `/api/upload/${uploadId}/status`,
+                        );
+
+                        const statusData = await statusResponse.json();
+
+                        const statusMap: Record<string, string> = {
+                          QUEUED: "Waiting in queue...",
+                          PROCESSING: "Transcoding video...",
+                          READY: "Completed",
+                          FAILED: "Failed",
+                        };
+
+                        setProcessingStatus(
+                          statusMap[statusData.status] ?? statusData.status,
+                        );
+
+                        setProcessingProgress(statusData.progress ?? 0);
+
+                        if (statusData.status === "READY") {
+                          if (intervalRef.current) {
+                            clearInterval(intervalRef.current);
+                          }
+
+                          setProcessingProgress(100);
+
+                          setIsTranscoding(false);
+
+                          alert("Video processed successfully!");
+
+                          setTitle("");
+                          setDescription("");
+                          setVideoUrl("");
+                          setThumbnailUrl("");
+                          setProcessingStatus(null);
+                          setProcessingProgress(0);
+                        }
+
+                        if (statusData.status === "FAILED") {
+                          if (intervalRef.current) {
+                            clearInterval(intervalRef.current);
+                          }
+
+                          setProcessingStatus("Failed");
+
+                          setIsTranscoding(false);
+
+                          alert("Video processing failed");
+                        }
+                      } catch (error) {
+                        console.error(error);
+                      }
+                    }, 3000);
                   } catch (error) {
                     console.error(error);
+
+                    setIsTranscoding(false);
+
                     alert(
                       error instanceof Error
                         ? error.message
-                        : "Something went wrong"
+                        : "Something went wrong",
                     );
-                  } finally {
-                    setIsTranscoding(false);
                   }
                 }}
                 className="mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-red-600 text-lg font-semibold transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-zinc-700"
@@ -219,7 +303,10 @@ export default function UploadPage() {
                 {isTranscoding ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Transcoding to HLS (this may take a few minutes)...
+
+                    {processingStatus === "QUEUED"
+                      ? "Waiting in queue..."
+                      : `Processing video (${processingProgress}%)`}
                   </>
                 ) : (
                   <>

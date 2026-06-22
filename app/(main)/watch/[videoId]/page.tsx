@@ -7,6 +7,7 @@ import CommentForm from "@/app/components/comment-form";
 import AddToPlaylistMenu from "@/app/components/add-to-playlist-menu";
 import AddToWatchLaterButton from "@/app/components/add-to-watch-later-button";
 import HlsVideoPlayer from "@/app/components/hls-video-player";
+import { Loader2 } from "lucide-react";
 
 interface WatchPageProps {
   params: Promise<{
@@ -67,9 +68,7 @@ function formatViews(count: number): string {
   return count.toString();
 }
 
-export default async function WatchPage({
-  params,
-}: WatchPageProps) {
+export default async function WatchPage({ params }: WatchPageProps) {
   const { videoId } = await params;
 
   const video = await prisma.upload.findUnique({
@@ -79,6 +78,12 @@ export default async function WatchPage({
 
     include: {
       channel: true,
+
+      variants: {
+        orderBy: {
+          bitrate: "desc",
+        },
+      },
 
       like: true,
 
@@ -107,35 +112,55 @@ export default async function WatchPage({
   return (
     <div className="min-h-screen bg-black px-6 py-8 text-white">
       {/* increment views */}
-      <IncrementView videoId={video.id} />
+      {video.status === "READY" && (
+  <IncrementView videoId={video.id} />
+)}
 
       <div className="mx-auto max-w-6xl">
         {/* VIDEO */}
         <div className="overflow-hidden rounded-2xl bg-zinc-900">
-          {video.status === "READY" ? (
-            <HlsVideoPlayer
-              src={video.videoUrl}
-              controls
-              className="aspect-video w-full"
-            />
+          {video.status === "READY" && video.playbackUrl ? (
+            <>
+              <HlsVideoPlayer
+                src={video.playbackUrl}
+                controls
+                className="aspect-video w-full"
+              />
+
+              {video.variants.length > 0 && (
+                <div className="border-t border-zinc-800 px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {video.variants.map((variant) => (
+                      <span
+                        key={variant.id}
+                        className="rounded-full bg-zinc-800 px-3 py-1 text-xs text-zinc-300"
+                      >
+                        {variant.resolution}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           ) : video.status === "PROCESSING" ? (
             <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-zinc-950 p-8 text-center">
-              <p className="text-lg font-semibold">
-                Video is still processing
-              </p>
+              <Loader2 className="h-10 w-10 animate-spin" />
+
+              <p className="text-lg font-semibold">Video is processing</p>
+
               <p className="max-w-md text-sm text-zinc-400">
-                We are transcoding this upload into adaptive HLS streams.
-                Refresh in a minute or check the feed later.
+                We are transcoding this upload into adaptive bitrate HLS
+                streams.
               </p>
             </div>
           ) : (
             <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-zinc-950 p-8 text-center">
               <p className="text-lg font-semibold text-red-400">
-                Processing failed
+                Video processing failed
               </p>
+
               <p className="max-w-md text-sm text-zinc-400">
-                This video could not be transcoded. Try uploading again from
-                the upload page.
+                This upload could not be transcoded.
               </p>
             </div>
           )}
@@ -143,58 +168,38 @@ export default async function WatchPage({
 
         {/* DETAILS */}
         <div className="mt-6">
-          <h1 className="text-3xl font-black">
-            {video.title}
-          </h1>
+          <h1 className="text-3xl font-black">{video.title}</h1>
 
           {/* CHANNEL + ACTIONS */}
           <div className="mt-4 flex flex-col gap-4 rounded-2xl bg-zinc-900 p-4 sm:flex-row sm:items-center sm:justify-between">
             {/* CHANNEL */}
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 font-bold">
-                {video.channel.channelName
-                  .charAt(0)
-                  .toUpperCase()}
+                {video.channel.channelName.charAt(0).toUpperCase()}
               </div>
 
               <div>
-                <p className="font-semibold">
-                  {video.channel.channelName}
-                </p>
+                <p className="font-semibold">{video.channel.channelName}</p>
 
                 <p className="text-sm text-zinc-400">
-                  {formatViews(
-                    video.viewCount
-                  )}{" "}
-                  views
+                  {formatViews(video.viewCount)} views
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               {/* LIKE BUTTON */}
-              <LikeButton
-                videoId={video.id}
-                initialLikes={
-                  video.like.length
-                }
-              />
+              <LikeButton videoId={video.id} initialLikes={video.like.length} />
 
-              <AddToWatchLaterButton
-                videoId={video.id}
-              />
+              <AddToWatchLaterButton videoId={video.id} />
 
-              <AddToPlaylistMenu
-                videoId={video.id}
-              />
+              <AddToPlaylistMenu videoId={video.id} />
             </div>
           </div>
 
           {/* DESCRIPTION */}
           <div className="mt-6 rounded-2xl bg-zinc-900 p-5">
-            <h2 className="mb-3 text-lg font-bold">
-              Description
-            </h2>
+            <h2 className="mb-3 text-lg font-bold">Description</h2>
 
             <p className="whitespace-pre-wrap text-zinc-300">
               {video.description}
@@ -204,53 +209,39 @@ export default async function WatchPage({
           {/* COMMENTS */}
           <div className="mt-8">
             <h2 className="mb-5 text-2xl font-bold">
-              Comments (
-              {video.comment.length})
+              Comments ({video.comment.length})
             </h2>
 
             {/* COMMENT FORM */}
-{/* COMMENT FORM */}
-<CommentForm videoId={video.id} />
+            {/* COMMENT FORM */}
+            <CommentForm videoId={video.id} />
 
             {/* COMMENTS LIST */}
             <div className="space-y-4">
-              {video.comment.length ===
-              0 ? (
+              {video.comment.length === 0 ? (
                 <div className="rounded-2xl bg-zinc-900 p-6 text-center text-zinc-400">
                   No comments yet
                 </div>
               ) : (
-                video.comment.map(
-                  (comment) => (
-                    <div
-                      key={comment.id}
-                      className="rounded-2xl bg-zinc-900 p-5"
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* USER AVATAR */}
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-700 font-bold">
-                          {comment.user.name
-                            ?.charAt(0)
-                            .toUpperCase()}
-                        </div>
+                video.comment.map((comment) => (
+                  <div key={comment.id} className="rounded-2xl bg-zinc-900 p-5">
+                    <div className="flex items-start gap-3">
+                      {/* USER AVATAR */}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-700 font-bold">
+                        {comment.user.name?.charAt(0).toUpperCase()}
+                      </div>
 
-                        {/* COMMENT */}
-                        <div>
-                          <p className="font-semibold">
-                            {
-                              comment.user
-                                .name
-                            }
-                          </p>
+                      {/* COMMENT */}
+                      <div>
+                        <p className="font-semibold">{comment.user.name}</p>
 
-                          <p className="mt-2 whitespace-pre-wrap text-zinc-300">
-                            {comment.commentText}
-                          </p>
-                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-zinc-300">
+                          {comment.commentText}
+                        </p>
                       </div>
                     </div>
-                  )
-                )
+                  </div>
+                ))
               )}
             </div>
           </div>
